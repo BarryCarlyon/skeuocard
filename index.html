@@ -30,7 +30,7 @@
       </header>
       <section>
         <!-- START FORM -->
-        
+
           <div class="credit-card-input no-js" id="skeuocard">
             <p class="no-support-warning">
               Either you have Javascript disabled, or you're using an unsupported browser, amigo! That's why you're seeing this old-school credit card input form instead of a fancy new Skeuocard. On the other hand, at least you know it gracefully degrades...
@@ -105,7 +105,7 @@ Diners Club: 38111111111119
     <script>
 
       $(document).ready(function(){
-        var isBrowserCompatible = 
+        var isBrowserCompatible =
           $('html').hasClass('ua-ie-10') ||
           $('html').hasClass('ua-webkit') ||
           $('html').hasClass('ua-firefox') ||
@@ -114,7 +114,8 @@ Diners Club: 38111111111119
 
         if(isBrowserCompatible){
           window.card = new Skeuocard($("#skeuocard"), {
-            debug: false
+            debug: false,
+            twoFace: true
           });
         }
       });
