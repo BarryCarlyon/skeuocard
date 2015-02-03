@@ -1,7 +1,7 @@
 ###
 "Skeuocard" -- A Skeuomorphic Credit-Card Input Enhancement
-@description Skeuocard is a skeuomorphic credit card input plugin, supporting 
-             progressive enhancement. It renders a credit-card input which 
+@description Skeuocard is a skeuomorphic credit card input plugin, supporting
+             progressive enhancement. It renders a credit-card input which
              behaves similarly to a physical credit card.
 @author Ken Keiter <ken@kenkeiter.com>
 @updated 2013-07-25
@@ -14,7 +14,7 @@ $ = jQuery
 class Skeuocard
 
   @currentDate: new Date()
-  
+
   constructor: (el, opts = {})->
     @el = container: $(el), underlyingFields: {}
     @_inputViews = {}
@@ -23,9 +23,9 @@ class Skeuocard
     @_state = {}
     @product = null
     @visibleFace = 'front'
-    
+
     # configure default opts
-    optDefaults = 
+    optDefaults =
       debug: false
       acceptedCardProducts: null
       cardNumberPlaceholderChar: 'X'
@@ -43,14 +43,14 @@ class Skeuocard
         hiddenFaceErrorWarning: "There's a problem on the other side."
         hiddenFaceSwitchPrompt: "Forget something?<br> Flip the card over."
     @options = $.extend(optDefaults, opts)
-    
+
     # initialize the card
     @_conformDOM()            # conform the DOM, add our elements
     @_bindInputEvents()       # bind input and interaction events
     @_importImplicitOptions() # import init options from DOM element attrs
     @render()                 # perform initial render
 
-  # Debugging helper; if debug is set to true at instantiation, messages will 
+  # Debugging helper; if debug is set to true at instantiation, messages will
   # be printed to the console.
   _log: (msg...)->
     if console?.log and !!@options.debug
@@ -65,7 +65,7 @@ class Skeuocard
     @el.container.bind(args...)
 
   ###
-  Transform the elements within the container, conforming the DOM so that it 
+  Transform the elements within the container, conforming the DOM so that it
   becomes styleable, and that the underlying inputs are hidden.
   ###
   _conformDOM: ->
@@ -120,11 +120,11 @@ class Skeuocard
     return @el.container
 
   ###
-  Import implicit initialization options from the DOM. Brings in things like 
+  Import implicit initialization options from the DOM. Brings in things like
   the accepted card type, initial validation state, existing values, etc.
   ###
   _importImplicitOptions: ->
-    
+
     for fieldName, fieldEl of @el.underlyingFields
       # import initial values, with constructor options taking precedence
       unless @options.initialValues[fieldName]?
@@ -138,8 +138,8 @@ class Skeuocard
       # import initial validation state
       unless @options.validationState[fieldName]?
         @options.validationState[fieldName] = not fieldEl.hasClass('invalid')
-            
-    # If no explicit acceptedCardProducts were specified, determine accepted 
+
+    # If no explicit acceptedCardProducts were specified, determine accepted
     # card products using the underlying type select field.
     unless @options.acceptedCardProducts?
       @options.acceptedCardProducts = []
@@ -151,7 +151,7 @@ class Skeuocard
     # setup default values; when render is called, these will be picked up
     if @options.initialValues.number.length > 0
       @set 'number', @options.initialValues.number
-    
+
     if @options.initialValues.name.length > 0
       @set 'name', @options.initialValues.name
 
@@ -176,7 +176,7 @@ class Skeuocard
   ###
   _bindInputEvents: ->
     # bind change handlers to render
-    @el.underlyingFields.number.bind "change", (e)=> 
+    @el.underlyingFields.number.bind "change", (e)=>
       @_inputViews.number.setValue @_getUnderlyingValue('number')
       @render()
 
@@ -189,11 +189,11 @@ class Skeuocard
     @el.underlyingFields.expMonth.bind "change", _expirationChange
     @el.underlyingFields.expYear.bind "change", _expirationChange
 
-    @el.underlyingFields.name.bind "change", (e)=> 
+    @el.underlyingFields.name.bind "change", (e)=>
       @_inputViews.exp.setValue @_getUnderlyingValue('name')
       @render()
 
-    @el.underlyingFields.cvc.bind "change", (e)=> 
+    @el.underlyingFields.cvc.bind "change", (e)=>
       @_inputViews.exp.setValue @_getUnderlyingValue('cvc')
       @render()
 
@@ -224,10 +224,16 @@ class Skeuocard
           @el.container.removeClass('unaccepted')
           @_renderProduct(null)
           @product = null
+
+        if @options.twoFace and @visibleFace is 'back'
+          @flip()
+
         @trigger 'productDidChange.skeuocard', [@, previousProduct, @product]
-    
+
     @_inputViews.exp.bind "keyup valueChanged", (e, input)=>
       newDate = input.getValue()
+      if @options.twoFace and @visibleFace is 'back'
+        @flip()
       @_updateValidation('exp', newDate)
       if newDate?
         @_setUnderlyingValue('expMonth', newDate.getMonth() + 1)
@@ -236,11 +242,15 @@ class Skeuocard
     @_inputViews.name.bind "keyup valueChanged", (e, input)=>
       value = input.getValue()
       @_setUnderlyingValue('name', value)
+      if @options.twoFace and @visibleFace is 'back'
+        @flip()
       @_updateValidation('name', value)
 
     @_inputViews.cvc.bind "keyup valueChanged", (e, input)=>
       value = input.getValue()
       @_setUnderlyingValue('cvc', value)
+      if @options.twoFace and @visibleFace is 'front'
+        @flip()
       @_updateValidation('cvc', value)
 
     @el.container.delegate "input", "keyup keydown", @_handleFieldTab.bind(@)
@@ -275,7 +285,7 @@ class Skeuocard
 
     # Check against the current product to determine if the field is filled
     isFilled = @product[fieldName].isFilled(newValue)
-    # If an initial value was supplied and marked as invalid, ensure that it 
+    # If an initial value was supplied and marked as invalid, ensure that it
     # has been changed to a new value.
     needsFix = @options.validationState[fieldName]? is false
     isFixed = @options.initialValues[fieldName]? and
@@ -293,7 +303,7 @@ class Skeuocard
       @_inputViews[fieldName].el.toggleClass 'filled', isFilled
       @_state["#{fieldName}Filled"] = isFilled
       @trigger "fieldFillStateDidChange.skeuocard", [@, fieldName, isFilled]
-    
+
     # If the valid state has changed, trigger events, and make styling changes.
     if validationStateChanged
       @trigger "fieldValidationStateWillChange.skeuocard", [@, fieldName, isValid]
@@ -328,7 +338,7 @@ class Skeuocard
       @trigger "faceValidationStateDidChange.skeuocard", [@, face, isValid]
 
   ###
-  Assert rendering changes necessary for the current product. Passing a null 
+  Assert rendering changes necessary for the current product. Passing a null
   value instead of a product will revert the card to a generic state.
   ###
   _renderProduct: (product)->
@@ -345,7 +355,7 @@ class Skeuocard
     # update the underlying card type field
     @_setUnderlyingValue('type', product?.attrs.companyShortname || null)
     # reconfigure the number input groupings
-    @_inputViews.number.setGroupings(product?.attrs.cardNumberGrouping || 
+    @_inputViews.number.setGroupings(product?.attrs.cardNumberGrouping ||
                                      [@options.genericPlaceholder.length])
     if product?
       # reconfigure the expiration input groupings
@@ -355,7 +365,7 @@ class Skeuocard
       @_inputViews.cvc.attr
         maxlength: product.attrs.cvcLength
         placeholder: new Array(product.attrs.cvcLength + 1).join(@options.cardNumberPlaceholderChar)
-    
+
       # set visibility and re-layout fields
       @_inputViewsByFace = {front: [], back: []}
       focused = $('input:focus') # allow restoration of focus upon re-attachment
@@ -404,7 +414,7 @@ class Skeuocard
     fieldEl = @el.underlyingFields[field]
     _newValue = (newValue || "").toString()
     throw "Set underlying value of unknown field: #{field}." unless fieldEl?
-    
+
     @trigger('change.skeuocard', [@])
     unless fieldEl.is('select')
       @el.underlyingFields[field].val(_newValue)

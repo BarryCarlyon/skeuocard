@@ -1,7 +1,7 @@
 /*
 "Skeuocard" -- A Skeuomorphic Credit-Card Input Enhancement
-@description Skeuocard is a skeuomorphic credit card input plugin, supporting 
-             progressive enhancement. It renders a credit-card input which 
+@description Skeuocard is a skeuomorphic credit card input plugin, supporting
+             progressive enhancement. It renders a credit-card input which
              behaves similarly to a physical credit card.
 @author Ken Keiter <ken@kenkeiter.com>
 @updated 2013-07-25
@@ -87,7 +87,7 @@
     };
 
     /*
-    Transform the elements within the container, conforming the DOM so that it 
+    Transform the elements within the container, conforming the DOM so that it
     becomes styleable, and that the underlying inputs are hidden.
     */
 
@@ -156,7 +156,7 @@
     };
 
     /*
-    Import implicit initialization options from the DOM. Brings in things like 
+    Import implicit initialization options from the DOM. Brings in things like
     the accepted card type, initial validation state, existing values, etc.
     */
 
@@ -266,12 +266,18 @@
             _this._renderProduct(null);
             _this.product = null;
           }
+          if (_this.options.twoFace && _this.visibleFace === 'back') {
+            _this.flip();
+          }
           return _this.trigger('productDidChange.skeuocard', [_this, previousProduct, _this.product]);
         }
       });
       this._inputViews.exp.bind("keyup valueChanged", function(e, input) {
         var newDate;
         newDate = input.getValue();
+        if (_this.options.twoFace && _this.visibleFace === 'back') {
+          _this.flip();
+        }
         _this._updateValidation('exp', newDate);
         if (newDate != null) {
           _this._setUnderlyingValue('expMonth', newDate.getMonth() + 1);
@@ -282,12 +288,18 @@
         var value;
         value = input.getValue();
         _this._setUnderlyingValue('name', value);
+        if (_this.options.twoFace && _this.visibleFace === 'back') {
+          _this.flip();
+        }
         return _this._updateValidation('name', value);
       });
       this._inputViews.cvc.bind("keyup valueChanged", function(e, input) {
         var value;
         value = input.getValue();
         _this._setUnderlyingValue('cvc', value);
+        if (_this.options.twoFace && _this.visibleFace === 'front') {
+          _this.flip();
+        }
         return _this._updateValidation('cvc', value);
       });
       this.el.container.delegate("input", "keyup keydown", this._handleFieldTab.bind(this));
@@ -390,7 +402,7 @@
     };
 
     /*
-    Assert rendering changes necessary for the current product. Passing a null 
+    Assert rendering changes necessary for the current product. Passing a null
     value instead of a product will revert the card to a generic state.
     */
 
